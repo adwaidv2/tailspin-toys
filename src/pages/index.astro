@@ -20,17 +20,27 @@ const summary = await getCatalogSummary(getDatabase());
     />
 
     <section class="mb-8 rounded-2xl border border-slate-700 bg-slate-800/80 p-6 shadow-lg" data-testid="catalog-summary" aria-label="Catalog summary">
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="catalog-total">
-          <p class="text-sm uppercase tracking-wide text-slate-400">Catalog Size</p>
-          <p class="mt-2 text-3xl font-bold text-slate-100" data-testid="catalog-total-value">{summary.totalGames}</p>
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="grid gap-4 sm:grid-cols-2 sm:flex-1">
+          <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="catalog-total">
+            <p class="text-sm uppercase tracking-wide text-slate-400">Total Games</p>
+            <p class="mt-2 text-3xl font-bold text-slate-100" data-testid="catalog-total-value">{summary.totalGames}</p>
+          </div>
+          <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="catalog-rating">
+            <p class="text-sm uppercase tracking-wide text-slate-400">Average Rating</p>
+            <p class="mt-2 text-3xl font-bold text-slate-100" data-testid="catalog-rating-value">
+              {summary.averageStarRating === null ? 'N/A' : summary.averageStarRating.toFixed(1)}
+            </p>
+          </div>
         </div>
-        <div class="rounded-xl border border-slate-700 bg-slate-900/60 p-4" data-testid="catalog-rating">
-          <p class="text-sm uppercase tracking-wide text-slate-400">Average Rating</p>
-          <p class="mt-2 text-3xl font-bold text-slate-100" data-testid="catalog-rating-value">
-            {summary.averageStarRating === null ? 'N/A' : summary.averageStarRating.toFixed(1)}
-          </p>
-        </div>
+
+        <a
+          href="/catalog"
+          class="inline-flex items-center justify-center rounded-lg border border-blue-500/50 bg-blue-600/10 px-4 py-2 text-sm font-medium text-blue-200 transition hover:border-blue-400 hover:bg-blue-500/20"
+          data-testid="catalog-filter-link"
+        >
+          Browse catalog filters
+        </a>
       </div>
       {summary.averageStarRating === null && (
         <p class="mt-4 text-sm text-slate-300" data-testid="catalog-rating-empty">

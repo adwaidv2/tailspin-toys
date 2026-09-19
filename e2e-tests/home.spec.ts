@@ -30,4 +30,21 @@ test.describe('Home Page', () => {
     await expect(page.getByTestId('catalog-total-value')).toHaveText(/\d+/);
     await expect(page.getByTestId('catalog-rating-value')).toContainText(/\d+(\.\d+)?|N\/A/);
   });
+
+  test('should navigate to the catalog page and filter by category', async ({ page }) => {
+    await page.getByTestId('catalog-filter-link').click();
+    await expect(page).toHaveURL('/catalog');
+    await expect(page.getByRole('heading', { name: 'Browse the catalog', exact: true })).toBeVisible();
+
+    const allGames = page.getByTestId('catalog-filter-all');
+    await expect(allGames).toBeVisible();
+
+    const categoryLink = page.getByRole('link', { name: 'Strategy', exact: true });
+    await expect(categoryLink).toBeVisible();
+    await categoryLink.click();
+
+    await expect(page).toHaveURL(/\/catalog\?category=\d+/);
+    await expect(page.getByTestId('catalog-result-count')).toContainText(/\d+ game/);
+    await expect(page.getByTestId('catalog-results-grid')).toBeVisible();
+  });
 });

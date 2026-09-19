@@ -1,0 +1,71 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PageHero from '../components/PageHero.astro';
+import GameCard from '../components/GameCard.astro';
+import EmptyState from '../components/EmptyState.astro';
+import { getDatabase } from '../lib/db';
+import { getAllCategories, getAllGames, getGamesByCategory } from '../lib/games';
+
+export const prerender = true;
+
+const allGames = await getAllGames(getDatabase());
+const categories = await getAllCategories(getDatabase());
+const categoryId = Number(Astro.url.searchParams.get('category') ?? '0') || 0;
+const filteredGames = categoryId > 0 ? await getGamesByCategory(getDatabase(), categoryId) : allGames;
+const selectedCategory = categories.find((category) => category.id === categoryId)?.name ?? 'All categories';
+---
+
+<Layout title="Catalog - Tailspin Toys">
+  <div class="py-8">
+    <PageHero
+      title="Browse the catalog"
+      subtitle="Filter the full library by category and find the perfect next game."
+    />
+
+    <section class="mb-8 rounded-2xl border border-slate-700 bg-slate-800/80 p-6 shadow-lg" data-testid="catalog-filters">
+      <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p class="text-sm uppercase tracking-wide text-slate-400">Current filter</p>
+          <p class="mt-2 text-2xl font-semibold text-slate-100" data-testid="catalog-filter-label">{selectedCategory}</p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <a
+            href="/catalog"
+            class:list={['rounded-lg border px-3 py-2 text-sm font-medium transition', categoryId === 0 ? 'border-blue-500 bg-blue-500/20 text-blue-100' : 'border-slate-600 bg-slate-900/60 text-slate-200 hover:border-slate-500']}
+            data-testid="catalog-filter-all"
+          >
+            All games
+          </a>
+
+          {categories.map((category) => (
+            <a
+              href={`/catalog?category=${category.id}`}
+              class:list={['rounded-lg border px-3 py-2 text-sm font-medium transition', categoryId === category.id ? 'border-blue-500 bg-blue-500/20 text-blue-100' : 'border-slate-600 bg-slate-900/60 text-slate-200 hover:border-slate-500']}
+              data-testid={`catalog-filter-${category.name.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              {category.name}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <div>
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <h2 class="text-2xl font-medium text-slate-100">{selectedCategory}</h2>
+        <span class="rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1 text-sm text-slate-300" data-testid="catalog-result-count">
+          {filteredGames.length} game{filteredGames.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
+      {filteredGames.length === 0 ? (
+        <EmptyState text="No games match this filter yet." />
+      ) : (
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="catalog-results-grid">
+          {filteredGames.map((game) => <GameCard game={game} />)}
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>

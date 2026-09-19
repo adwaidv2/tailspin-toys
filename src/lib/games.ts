@@ -55,9 +55,27 @@ function baseGamesQuery(db: Database) {
         .leftJoin(publishers, eq(games.publisherId, publishers.id));
 }
 
+/** All game categories ordered by name. */
+export async function getAllCategories(db: Database): Promise<{ id: number; name: string }[]> {
+    const rows = await db
+        .select({ id: categories.id, name: categories.name })
+        .from(categories)
+        .orderBy(asc(categories.name));
+
+    return rows.map((row) => ({ id: row.id, name: row.name }));
+}
+
 /** All games ordered by title. */
 export async function getAllGames(db: Database): Promise<Game[]> {
     const rows = await baseGamesQuery(db).orderBy(asc(games.title));
+    return rows.map(mapGame);
+}
+
+/** Filtered games for a single category ordered by title. */
+export async function getGamesByCategory(db: Database, categoryId: number): Promise<Game[]> {
+    const rows = await baseGamesQuery(db)
+        .where(eq(games.categoryId, categoryId))
+        .orderBy(asc(games.title));
     return rows.map(mapGame);
 }
 
