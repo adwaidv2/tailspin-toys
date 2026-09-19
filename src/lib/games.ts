@@ -1,7 +1,12 @@
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, count, sql } from 'drizzle-orm';
 import type { Database } from './db';
 import { games, categories, publishers } from '../../db/schema';
 import type { Game } from '../types/game';
+
+export interface CatalogSummary {
+    totalGames: number;
+    averageStarRating: number | null;
+}
 
 const gameSelection = {
     id: games.id,
@@ -66,4 +71,27 @@ export async function getAllGameIds(db: Database): Promise<number[]> {
 export async function getGameById(db: Database, id: number): Promise<Game | null> {
     const row = await baseGamesQuery(db).where(eq(games.id, id)).get();
     return row ? mapGame(row) : null;
+}
+
+/** Catalog totals and average star rating, with graceful empty/unrated fallbacks. */
+export async function getCatalogSummary(db: Database): Promise<CatalogSummary> {
+    const totalRows = await db.select({ totalGames: count() }).from(games).get();
+    const totalGames = Number(totalRows?.totalGames ?? 0);
+
+    const ratedRows = await db
+        .select({ averageStarRating: sql<number | null>`avg(${games.starRating})` })
+        .from(games)
+        .where(sql`${games.starRating} IS NOT NULL`)
+        .get();
+
+    const averageStarRating = ratedRows?.averageStarRating ?? null;
+
+    if (totalGames === 0 || averageStarRating === null) {
+        return { totalGames, averageStarRating: null };
+    }
+
+    return {
+        totalGames,
+        averageStarRating: Number(averageStarRating),
+    };
 }
